@@ -216,3 +216,7 @@ Then consider desktop packaging, captive-portal detection, notifications, report
 exports, device-bound quality probes and schema migrations. Raspberry Pi, ESP32,
 multi-device monitoring, heatmaps and ML prediction are extension points, not implemented
 features.
+
+## Vercel deployment
+
+The hosted build provides a browser-only demo with synthetic networks and no credentials. Real Wi-Fi management remains local. See [Vercel deployment](docs/vercel.md).

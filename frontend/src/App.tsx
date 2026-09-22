@@ -1,3 +1,4 @@
+import { hostedDemo } from "./services/environment";
 import { useState } from "react";
 import {
   Activity,
@@ -148,6 +149,7 @@ export default function App() {
           </span>
         </header>
         <main>
+          {hostedDemo && <div className="notice">Hosted demo · Synthetic networks only. No passwords are collected. Reload resets the demo. Run the local app to manage real Wi-Fi.</div>}
           <div className="page-heading">
             <div>
               <h1>{page}</h1>

@@ -1,9 +1,14 @@
+import { hostedDemo } from "./environment";
 import type { Snapshot } from "../types";
 export async function api<T>(
   path: string,
   method = "GET",
   body?: unknown,
 ): Promise<T> {
+  if (hostedDemo) {
+    const { demoApi } = await import("./hostedDemo");
+    return demoApi<T>(path, method, body);
+  }
   const response = await fetch("/api" + path, {
     method,
     headers: {

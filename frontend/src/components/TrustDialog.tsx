@@ -1,3 +1,4 @@
+import { hostedDemo } from "../services/environment";
 import { useState } from "react";
 import { ShieldCheck, X } from "lucide-react";
 import type { Network } from "../types";
@@ -31,7 +32,7 @@ export function TrustDialog({
       await onSave({
         ssid,
         security,
-        password: security === "Open" ? undefined : password,
+        password: hostedDemo || security === "Open" ? undefined : password,
         bssid: pin ? network?.bssid || "" : "",
         authorized,
         auto_connect_enabled: true,
@@ -88,7 +89,7 @@ export function TrustDialog({
               <option>Open</option>
             </select>
           </label>
-          {security !== "Open" && (
+          {security !== "Open" && !hostedDemo && (
             <label>
               Wi-Fi passphrase
               <input
