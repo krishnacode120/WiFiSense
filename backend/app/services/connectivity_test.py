@@ -1,5 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import ipaddress
+import math
+from app.adapters.base_wifi_adapter import WifiError
 import socket
 import subprocess
 import sys
@@ -15,17 +17,17 @@ class ConnectivityTest:
     def run(self):
         if self.simulation:
             online = self.adapter.online
-            return {"internet_available": online, "latency_ms": round(18 + 5 * abs(__import__('math').sin(time.monotonic() / 10)), 1) if online else None,
+            return {"internet_available": online, "latency_ms": round(18 + 5 * abs(math.sin(time.monotonic() / 10)), 1) if online else None,
                     "dns_working": online, "gateway_reachable": True, "packet_loss_percent": None, "probe": "simulation"}
         def gateway():
-            address = self.adapter.gateway()
-            if not address:
-                return None
             try:
+                address = self.adapter.gateway()
+                if not address:
+                    return None
                 address = str(ipaddress.ip_address(address))
                 args = ["ping", "-n", "1", "-w", "1000", address] if sys.platform == "win32" else ["ping", "-c", "1", "-W", "1", address]
                 return subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2).returncode == 0
-            except (ValueError, OSError, subprocess.TimeoutExpired):
+            except (ValueError, OSError, subprocess.TimeoutExpired, WifiError):
                 return None
         def internet():
             start = time.monotonic()
@@ -40,10 +42,8 @@ class ConnectivityTest:
                 return True
             except Exception:
                 return False
-        # Alias avoids shadowing the imported dns package inside the function.
-        dns_check = check_dns
         with ThreadPoolExecutor(max_workers=3) as pool:
-            gw, tcp, resolution = pool.submit(gateway), pool.submit(internet), pool.submit(dns_check)
+            gw, tcp, resolution = pool.submit(gateway), pool.submit(internet), pool.submit(check_dns)
             available, latency = tcp.result()
             return {"gateway_reachable": gw.result(), "internet_available": available, "latency_ms": latency,
                     "dns_working": resolution.result(), "packet_loss_percent": None, "probe": "TCP handshake to 1.1.1.1:443"}

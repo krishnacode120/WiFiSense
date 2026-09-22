@@ -122,7 +122,7 @@ class NetworkManager:
                     cached = self.measurements.get(self.identity(n))
                     data = cached[1] if cached and time.monotonic() - cached[0] <= 300 else None
                     sample = self.samples.get(self.identity(n), [])
-                    stability = 100 * sum(sample) / len(sample) if sample else 50
+                    stability = 100 * sum(sample) / len(sample) if sample and data is not None else 50
                     quality = get_signal_quality(n.rssi)["quality"] if n.rssi is not None else n.signal_strength
                     n.score = score_network(quality, data, stability, t.priority, t.id == self.settings.preferred_network, self.settings)
             return sorted(networks, key=lambda n: (n.score if n.score is not None else -1, n.signal_strength), reverse=True)
@@ -173,6 +173,8 @@ class NetworkManager:
             previous = current
             password = self.credentials.get_credential(identity) if trusted.security != "Open" else None
             if trusted.security != "Open" and not password:
+                self.failures[identity] = time.monotonic() + max(30, self.settings.roaming_cooldown)
+                self.audit("connection_failed", trusted.ssid, "credential unavailable")
                 raise WifiError("Credential is unavailable; remove and re-add this trusted network")
             self.audit("connection_requested", trusted.ssid, "automatic" if automatic else "manual")
             try:
@@ -218,6 +220,8 @@ class NetworkManager:
                 if decorated:
                     current = current.model_copy(update={"trusted": decorated.trusted, "trusted_id": decorated.trusted_id, "score": decorated.score})
             measured = self.measurements.get(self.identity(current))
+            if measured and (time.monotonic() - measured[0] > 300 or not current or not current.trusted):
+                measured = None
             return {"network": current, "connectivity": measured[1] if measured else None,
                     "measurement_age_seconds": round(time.monotonic() - measured[0]) if measured else None,
                     "connection_duration_seconds": round(time.monotonic() - self.connected_since) if self.connected_since else 0,

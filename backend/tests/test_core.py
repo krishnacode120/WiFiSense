@@ -183,3 +183,50 @@ def test_password_not_in_db_logs_or_api(client, manager, capsys):
     assert "simulation-only-passphrase" not in capsys.readouterr().err
     assert client.delete("/api/wifi/trusted/" + identity).status_code == 200
     assert manager.credentials.get_credential(identity) is None
+
+def test_missing_credential_does_not_starve_other_trusted_networks(client, manager):
+    home = trust(client).json()
+    trust(client, "Home_2G")
+    manager.credentials.delete_credential(home["id"])
+    client.post("/api/wifi/auto-connect/enable")
+    with pytest.raises(WifiError, match="Credential"):
+        manager.tick()
+    manager.tick()
+    assert manager.current.ssid == "Home_2G"
+
+
+def test_sustained_roaming_integration(client, manager):
+    import time
+    trust(client)
+    slower = trust(client, "Home_2G").json()
+    client.post("/api/wifi/connect/" + slower["id"])
+    manager.adapter.networks[1].signal_strength = 20
+    manager.adapter.networks[1].rssi = -90
+    manager.scanner.last_scan = float("-inf")
+    manager.roaming.last_switch = float("-inf")
+    client.post("/api/wifi/auto-connect/enable")
+    manager.tick()
+    assert manager.current.ssid == "Home_2G"
+    manager.roaming.since = time.monotonic() - 16
+    manager.tick()
+    assert manager.current.ssid == "Home_5G"
+    assert "switched" in [e["event"] for e in client.get("/api/wifi/history").json()]
+
+
+def test_mode_separation_even_with_shared_database(client, manager):
+    from app.models import TrustedNetwork
+    from sqlalchemy import select
+    trust(client)
+    with manager.sessions() as db:
+        assert list(db.scalars(select(TrustedNetwork).where(TrustedNetwork.mode == "system"))) == []
+    manager.mode = "system"
+    assert manager.trusted() == []
+    assert not any(n.trusted for n in manager.scan())
+
+
+def test_monitor_history_is_rate_limited(client, manager):
+    trust(client)
+    manager.tick()
+    first = len(client.get("/api/wifi/metrics").json()["signals"])
+    manager.tick()
+    assert len(client.get("/api/wifi/metrics").json()["signals"]) == first

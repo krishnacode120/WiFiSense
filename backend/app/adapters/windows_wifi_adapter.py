@@ -48,6 +48,8 @@ def parse_scan(output):
         key, value = [p.strip() for p in line.split(":", 1)]
         if key == "Authentication":
             security = security_type(value)
+        elif key == "Encryption" and value.upper() == "WEP":
+            security = "Unsupported"
         elif re.fullmatch(r"BSSID\s+\d+", key):
             if not re.fullmatch(r"(?:[a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}", value):
                 continue
@@ -99,6 +101,8 @@ class WindowsWifiAdapter(WifiAdapter):
     def scan_networks(self):
         interface = self._interface()
         output = self._run("wlan", "show", "networks", "mode=bssid", "interface=" + interface["Name"])
+        if re.search(r"There are 0 networks", output):
+            return []
         if "SSID" not in output:
             raise WifiError("Wi-Fi scan unavailable; check radio and Windows location permissions")
         networks = parse_scan(output)
@@ -116,7 +120,7 @@ class WindowsWifiAdapter(WifiAdapter):
         bssid = data.get("AP BSSID") or data.get("BSSID")
         return Network(ssid=data.get("SSID", ""), bssid=bssid.lower() if bssid else None,
                        signal_strength=min(100, int(signal[0])) if signal else 0,
-                       security=security_type(data.get("Authentication", "")),
+                       security="Unsupported" if data.get("Cipher", "").upper() == "WEP" else security_type(data.get("Authentication", "")),
                        channel=int(channel) if channel.isdigit() else None, band=data.get("Band"), connected=True)
 
     def connect(self, network, password):

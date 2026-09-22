@@ -26,4 +26,4 @@ class MonitoringService:
 
     def stop(self):
         self.stop_event.set()
-        self.thread.join(timeout=50)
+        self.thread.join()  # Wait for bounded adapter operations before disposing the database.

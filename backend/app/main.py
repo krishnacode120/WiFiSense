@@ -61,7 +61,13 @@ def create_app(config=None, adapter=None, credential_store=None, monitor=True):
             return JSONResponse({"detail": "Origin is not allowed"}, status_code=403)
         if request.method not in {"GET", "HEAD", "OPTIONS"} and request.headers.get("X-WiFiSense") != "local-dashboard":
             return JSONResponse({"detail": "Local dashboard header is required"}, status_code=403)
-        return await call_next(request)
+        try:
+            return await call_next(request)
+        except Exception:
+            # Never let a low-level exception dump request input or credentials to a server log.
+            from app.utils.logging import logger
+            logger.error("request_internal_error")
+            return JSONResponse({"detail": "Operation failed; check service and adapter availability"}, status_code=500)
 
     @app.exception_handler(RequestValidationError)
     async def invalid(request, exc):
