@@ -25,9 +25,7 @@ def create_app(config=None, adapter=None, credential_store=None, monitor=True):
     async def lifespan(app):
         selected = adapter
         if selected is None:
-            if config.mode == "simulation":
-                selected = SimulatedWifiAdapter()
-            elif sys.platform == "win32":
+            if sys.platform == "win32":
                 from app.adapters.windows_wifi_adapter import WindowsWifiAdapter
                 selected = WindowsWifiAdapter(config.interface)
             elif sys.platform.startswith("linux"):
