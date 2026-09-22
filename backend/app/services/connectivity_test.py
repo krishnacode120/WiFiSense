@@ -11,14 +11,10 @@ import dns.resolver
 
 class ConnectivityTest:
     """One gateway echo, one TCP handshake, one bounded DNS lookup; no scanning."""
-    def __init__(self, adapter, simulation=False):
-        self.adapter, self.simulation = adapter, simulation
+    def __init__(self, adapter):
+        self.adapter = adapter
 
     def run(self):
-        if self.simulation:
-            online = self.adapter.online
-            return {"internet_available": online, "latency_ms": round(18 + 5 * abs(math.sin(time.monotonic() / 10)), 1) if online else None,
-                    "dns_working": online, "gateway_reachable": True, "packet_loss_percent": None, "probe": "simulation"}
         def gateway():
             try:
                 address = self.adapter.gateway()

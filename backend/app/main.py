@@ -34,7 +34,7 @@ def create_app(config=None, adapter=None, credential_store=None, monitor=True):
             else:
                 raise WifiError("This operating system is unsupported")
         engine, sessions = make_database(config.database)
-        app.state.manager = NetworkManager(selected, credential_store or CredentialStore(config.mode), sessions, config.mode, ConnectivityTest(selected, config.mode == "simulation"))
+        app.state.manager = NetworkManager(selected, credential_store or CredentialStore(config.mode), sessions, config.mode, ConnectivityTest(selected))
         app.state.monitor = MonitoringService(app.state.manager) if monitor else None
         if app.state.monitor:
             app.state.monitor.start()

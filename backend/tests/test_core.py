@@ -47,8 +47,19 @@ def test_roaming_hysteresis_cooldown_and_reset():
     assert r.should_switch("b", 100, 40, 105, s)
 
 
-def test_credential_interface_simulation():
-    store = CredentialStore("simulation")
+def test_credential_interface():
+    class MockBackend:
+        def __init__(self):
+            self.memory = {}
+        def set_password(self, service, identity, password):
+            self.memory[identity] = password
+        def get_password(self, service, identity):
+            return self.memory.get(identity)
+        def delete_password(self, service, identity):
+            self.memory.pop(identity, None)
+            
+    store = CredentialStore("system")
+    store.backend = MockBackend()
     store.save_credential("ssid-id", "not-a-real-credential")
     assert store.get_credential("ssid-id") == "not-a-real-credential"
     store.delete_credential("ssid-id")
@@ -59,8 +70,8 @@ def test_credential_backend_failure_is_redacted():
     class Broken:
         def get_password(self, *args):
             raise RuntimeError("sensitive value from backend")
-    store = CredentialStore("simulation")
-    store.mode, store.backend = "system", Broken()
+    store = CredentialStore("system")
+    store.backend = Broken()
     with pytest.raises(WifiError, match="Could not read") as exc:
         store.get_credential("id")
     assert "sensitive" not in str(exc.value)
@@ -213,15 +224,7 @@ def test_sustained_roaming_integration(client, manager):
     assert "switched" in [e["event"] for e in client.get("/api/wifi/history").json()]
 
 
-def test_mode_separation_even_with_shared_database(client, manager):
-    from app.models import TrustedNetwork
-    from sqlalchemy import select
-    trust(client)
-    with manager.sessions() as db:
-        assert list(db.scalars(select(TrustedNetwork).where(TrustedNetwork.mode == "system"))) == []
-    manager.mode = "system"
-    assert manager.trusted() == []
-    assert not any(n.trusted for n in manager.scan())
+
 
 
 def test_monitor_history_is_rate_limited(client, manager):

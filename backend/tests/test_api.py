@@ -39,7 +39,7 @@ def test_settings_validation_and_persistence(client, manager):
     assert result.json()["weights"]["signal"] == .4
     from app.models import Setting
     with manager.sessions() as db:
-        assert db.get(Setting, "simulation").value["scan_interval"] == 20
+        assert db.get(Setting, "system").value["scan_interval"] == 20
 
 
 def test_pagination_and_openapi(client):
