@@ -1,8 +1,144 @@
-import {useState} from 'react'
-import {ShieldCheck,X} from 'lucide-react'
-import type {Network} from '../types'
-export function TrustDialog({network,onClose,onSave}:{network:Network|null;onClose:()=>void;onSave:(body:unknown)=>Promise<void>}){
- const [ssid,setSsid]=useState(network?.ssid||''),[security,setSecurity]=useState(['Open','WPA2-Personal','WPA3-Personal'].includes(network?.security||'')?network!.security:'WPA2-Personal'),[password,setPassword]=useState(''),[pin,setPin]=useState(false),[authorized,setAuthorized]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('')
- async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{await onSave({ssid,security,password:security==='Open'?undefined:password,bssid:pin?network?.bssid||'':'',authorized,auto_connect_enabled:true,priority:0});setPassword('');onClose()}catch(e){setError(e instanceof Error?e.message:'Could not save network')}finally{setBusy(false)}}
- return <div className="modal-backdrop"><section role="dialog" aria-modal="true" aria-labelledby="trust-title" className="modal"><button className="icon-button close" aria-label="Close dialog" onClick={onClose} disabled={busy}><X size={20}/></button><div className="big-icon"><ShieldCheck/></div><h2 id="trust-title">Trust a network</h2><p>Only add a network you own or have permission to use.</p><form onSubmit={submit}><label>Network name (SSID)<input autoFocus required value={ssid} onChange={e=>setSsid(e.target.value)} maxLength={32}/></label><label>Security<select value={security} onChange={e=>setSecurity(e.target.value)}><option>WPA2-Personal</option><option>WPA3-Personal</option><option>Open</option></select></label>{security!=='Open'&&<label>Wi-Fi passphrase<input aria-label="Wi-Fi passphrase" type="password" autoComplete="new-password" minLength={8} maxLength={63} required value={password} onChange={e=>setPassword(e.target.value)}/><small>Stored in your OS keyring. Simulation uses temporary memory.</small></label>}{network?.bssid&&<label className="check"><input type="checkbox" checked={pin} onChange={e=>setPin(e.target.checked)}/>Restrict to access point {network.bssid}</label>}<label className="check"><input type="checkbox" checked={authorized} onChange={e=>setAuthorized(e.target.checked)} required/>I am authorized to connect to this network and allow WiFiSense to manage it.</label>{error&&<div role="alert" className="error">{error}</div>}<button className="button primary full" disabled={busy||!authorized}>{busy?'Saving securely…':'Save trusted network'}</button></form></section></div>
+import { useState } from "react";
+import { ShieldCheck, X } from "lucide-react";
+import type { Network } from "../types";
+export function TrustDialog({
+  network,
+  onClose,
+  onSave,
+}: {
+  network: Network | null;
+  onClose: () => void;
+  onSave: (body: unknown) => Promise<void>;
+}) {
+  const [ssid, setSsid] = useState(network?.ssid || ""),
+    [security, setSecurity] = useState(
+      ["Open", "WPA2-Personal", "WPA3-Personal"].includes(
+        network?.security || "",
+      )
+        ? network!.security
+        : "WPA2-Personal",
+    ),
+    [password, setPassword] = useState(""),
+    [pin, setPin] = useState(false),
+    [authorized, setAuthorized] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await onSave({
+        ssid,
+        security,
+        password: security === "Open" ? undefined : password,
+        bssid: pin ? network?.bssid || "" : "",
+        authorized,
+        auto_connect_enabled: true,
+        priority: 0,
+      });
+      setPassword("");
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save network");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="modal-backdrop">
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="trust-title"
+        className="modal"
+      >
+        <button
+          className="icon-button close"
+          aria-label="Close dialog"
+          onClick={onClose}
+          disabled={busy}
+        >
+          <X size={20} />
+        </button>
+        <div className="big-icon">
+          <ShieldCheck />
+        </div>
+        <h2 id="trust-title">Trust a network</h2>
+        <p>Only add a network you own or have permission to use.</p>
+        <form onSubmit={submit}>
+          <label>
+            Network name (SSID)
+            <input
+              autoFocus
+              required
+              value={ssid}
+              onChange={(e) => setSsid(e.target.value)}
+              maxLength={32}
+            />
+          </label>
+          <label>
+            Security
+            <select
+              value={security}
+              onChange={(e) => setSecurity(e.target.value)}
+            >
+              <option>WPA2-Personal</option>
+              <option>WPA3-Personal</option>
+              <option>Open</option>
+            </select>
+          </label>
+          {security !== "Open" && (
+            <label>
+              Wi-Fi passphrase
+              <input
+                aria-label="Wi-Fi passphrase"
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={63}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <small>
+                Stored in your OS keyring. Simulation uses temporary memory.
+              </small>
+            </label>
+          )}
+          {network?.bssid && (
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={pin}
+                onChange={(e) => setPin(e.target.checked)}
+              />
+              Restrict to access point {network.bssid}
+            </label>
+          )}
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={authorized}
+              onChange={(e) => setAuthorized(e.target.checked)}
+              required
+            />
+            I am authorized to connect to this network and allow WiFiSense to
+            manage it.
+          </label>
+          {error && (
+            <div role="alert" className="error">
+              {error}
+            </div>
+          )}
+          <button
+            className="button primary full"
+            disabled={busy || !authorized}
+          >
+            {busy ? "Saving securely…" : "Save trusted network"}
+          </button>
+        </form>
+      </section>
+    </div>
+  );
 }

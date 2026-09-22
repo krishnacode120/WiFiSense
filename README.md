@@ -103,8 +103,8 @@ $env:WIFISENSE_INTERFACE="Wi-Fi"
 
 Linux: `WIFISENSE_MODE=system WIFISENSE_INTERFACE=wlan0 ../.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`.
 
-Platform adapter implementations follow the verified simulation milestone in separate
-commits. See setup documentation for their supported security types and platform limitations.
+Windows and Linux adapter implementations are included in separate phase commits.
+See setup documentation for supported security types and platform limitations.
 No saved OS profiles are implicitly imported as trusted networks.
 
 ## Production assets, local hosting
@@ -159,8 +159,10 @@ Automated tests never need a real wireless adapter.
 
 ## Screenshots
 
-Simulation screenshots will be recorded after the browser workflow is verified.
-No real SSIDs, credentials or user history belong in repository screenshots.
+![WiFiSense light desktop dashboard](docs/screenshots/dashboard-desktop.png)
+
+[Mobile dashboard](docs/screenshots/dashboard-mobile.png). These are synthetic simulation
+fixtures from the verified browser workflow. See [verification record](docs/verification.md).
 
 ## Troubleshooting
 
@@ -187,6 +189,10 @@ guaranteed to isolate the Wi-Fi interface. Native hardware validation is separat
 from simulated and mocked testing.
 
 ## GitHub & contributions
+
+Repository: https://github.com/krishnacode120/WiFiSense
+
+See [contribution guidelines](CONTRIBUTING.md).
 
 ```bash
 git init

@@ -1,12 +1,214 @@
-import {Activity,ArrowDownUp,ArrowUpRight,Clock3,Globe2,History,Power,ShieldCheck,Signal,Wifi,Zap} from 'lucide-react'
-import type {Snapshot,Network} from '../types'
-import {Timeline} from '../components/Charts'
-import {displayDate} from '../services/api'
-function duration(s:number){return s>=3600?Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m':Math.floor(s/60)+'m '+s%60+'s'}
-export function Dashboard({data,busy,run,navigate,networkList}:{data:Snapshot;busy:boolean;run:(path:string)=>void;navigate:(page:string)=>void;networkList:(n:Network[])=>React.ReactNode}){
- const c=data.current,n=c.network
- return <><div className="dashboard-grid"><section className="panel connection-panel"><div className="panel-heading"><span className="section-label"><Wifi size={17}/>CURRENT CONNECTION</span><span className={'badge '+(n?'mint':'neutral')}>{n?'Connected':'Disconnected'}</span></div><div className="connection-body"><div><h2 className="ssid-title">{n?.ssid||'A better connection starts here'}</h2><p>{n?<>{n.security} <span className="separator">/</span> {n.band||'Band unavailable'} <span className="separator">/</span> {n.trusted?'Trusted network':'Outside trusted list'}</>:'Save a network you trust, then let WiFiSense do the rest.'}</p><div className="connection-details"><span><ShieldCheck size={14}/>{n?.trusted?'Authorized network':'Awaiting authorization'}</span><span><Clock3 size={14}/>{duration(c.connection_duration_seconds)}</span></div></div><div className="signal-orb" style={{'--signal':(n?.signal_strength||0)*3.6+'deg'} as React.CSSProperties}><div><Wifi size={23}/><strong>{n?.signal_strength??'—'}<small>{n?'%':''}</small></strong><span>{n?.quality||'NO SIGNAL'}</span></div></div></div><div className="connection-footer"><span><i className="status-dot"/>{data.system.monitoring?'Monitoring every '+data.settings.monitoring_interval+' seconds':'Monitor paused'}</span>{n?<button className="text-button" disabled={busy} onClick={()=>run('/wifi/disconnect')}><Power size={14}/>Disconnect</button>:<button className="text-button mint" onClick={()=>navigate('Nearby Networks')}>Find a network <ArrowUpRight size={15}/></button>}</div></section><section className="panel automation-panel"><div className="panel-heading"><div className="purple-icon"><Zap size={20}/></div><label className="switch" aria-label="Enable auto connect"><input type="checkbox" checked={c.auto_connect} disabled={busy} onChange={e=>run('/wifi/auto-connect/'+(e.target.checked?'enable':'disable'))}/><span/></label></div><h2>Always on the best network.</h2><p>Intelligent selection keeps you connected to the strongest trusted connection.</p><div className="automation-foot"><span className="badge purple">Auto-connect {c.auto_connect?'enabled':'paused'}</span><button aria-label="Configure automation" className="icon-button" onClick={()=>navigate('Settings')}><ArrowUpRight size={18}/></button></div></section></div>
- <div className="stats-grid"><Stat icon={Globe2} label="Internet access" value={c.connectivity?(c.connectivity.internet_available?'Online':'Unavailable'):'Not checked'} hint={c.connectivity?'DNS '+(c.connectivity.dns_working?'resolving':'unavailable'):'Verified after trusted connection'}/><Stat icon={Activity} label="Network latency" value={c.connectivity?.latency_ms!=null?c.connectivity.latency_ms+' ms':'—'} hint={c.connectivity?.probe||'Waiting for a measurement'}/><Stat icon={Signal} label="Connection score" value={n?.score!=null?n.score.toFixed(1):'—'} hint="Signal · internet · latency · stability"/><Stat icon={ShieldCheck} label="Trusted networks" value={String(data.trusted.length).padStart(2,'0')} hint={data.networks.filter(x=>x.trusted).length+' currently in range'}/></div>
- <div className="lower-grid"><section className="panel"><div className="panel-heading"><div><h2>Signal performance</h2><p className="muted">Recent connection measurements</p></div><span className="chart-key"><i/>Signal strength</span></div><Timeline data={data.metrics.connections}/></section><section className="panel"><div className="panel-heading"><h2>Recent activity</h2><button className="text-button" onClick={()=>navigate('Connection History')}>View all <ArrowUpRight size={14}/></button></div><div className="activity-list">{data.events.length?data.events.slice(0,4).map(e=><div className="activity-item" key={e.id}><div className="activity-icon">{e.event==='switched'?<ArrowDownUp size={16}/>:<Activity size={16}/>}</div><div><strong>{e.event.replaceAll('_',' ')}</strong><p>{e.ssid||'WiFiSense settings'}</p><small>{displayDate(e.timestamp)}</small></div></div>):<div className="empty compact"><History/><p>Your connection activity will appear here.</p></div>}</div></section></div><section className="panel networks-panel"><div className="panel-heading"><div><h2>Nearby trusted networks <span className="count">{data.networks.filter(x=>x.trusted).length}</span></h2><p className="muted">Authorized connections, ranked by overall quality.</p></div><button className="text-button" onClick={()=>navigate('Nearby Networks')}>Explore networks <ArrowUpRight size={15}/></button></div>{networkList(data.networks.filter(x=>x.trusted))}</section></>
+import { Activity, ArrowUpRight, Clock3, Power, Wifi } from "lucide-react";
+import type { Snapshot, Network } from "../types";
+import { Timeline } from "../components/Charts";
+import { displayDate } from "../services/api";
+function duration(s: number) {
+  return s >= 3600
+    ? Math.floor(s / 3600) + "h " + Math.floor((s % 3600) / 60) + "m"
+    : Math.floor(s / 60) + "m " + (s % 60) + "s";
 }
-function Stat({icon:Icon,label,value,hint}:{icon:typeof Wifi;label:string;value:string;hint:string}){return <section className="panel stat"><div className="stat-label">{label}<Icon size={17}/></div><strong>{value}</strong><small>{hint}</small></section>}
+export function Dashboard({
+  data,
+  busy,
+  run,
+  navigate,
+  networkList,
+}: {
+  data: Snapshot;
+  busy: boolean;
+  run: (path: string) => void;
+  navigate: (page: string) => void;
+  networkList: (n: Network[]) => React.ReactNode;
+}) {
+  const c = data.current,
+    n = c.network;
+  return (
+    <>
+      <section className="panel current-panel">
+        <div className="connection-heading">
+          <div className="connection-title">
+            <Wifi size={24} />
+            <div>
+              <div className="overline">CURRENT CONNECTION</div>
+              <h2>{n?.ssid || "Not connected"}</h2>
+              <p>
+                {n
+                  ? n.security + " · " + (n.band || "Band unavailable")
+                  : "Choose an authorized network to connect."}
+              </p>
+            </div>
+          </div>
+          <div className="connection-actions">
+            <span className={"connection-state " + (n ? "online" : "")}>
+              {n ? "Connected" : "Disconnected"}
+            </span>
+            {n ? (
+              <button
+                className="button"
+                disabled={busy}
+                onClick={() => run("/wifi/disconnect")}
+              >
+                <Power size={14} />
+                Disconnect
+              </button>
+            ) : (
+              <button
+                className="button primary"
+                onClick={() => navigate("Nearby Networks")}
+              >
+                Choose network
+              </button>
+            )}
+          </div>
+        </div>
+        <dl className="connection-readings">
+          <div>
+            <dt>Signal</dt>
+            <dd>{n ? n.signal_strength + "%" : "—"}</dd>
+            <small>{n?.quality || "No measurement"}</small>
+          </div>
+          <div>
+            <dt>Internet</dt>
+            <dd>
+              {c.connectivity
+                ? c.connectivity.internet_available
+                  ? "Online"
+                  : "Unavailable"
+                : "Not checked"}
+            </dd>
+            <small>
+              {c.connectivity
+                ? "DNS " +
+                  (c.connectivity.dns_working ? "working" : "unavailable")
+                : "Checked on trusted networks"}
+            </small>
+          </div>
+          <div>
+            <dt>Latency</dt>
+            <dd>
+              {c.connectivity?.latency_ms != null
+                ? c.connectivity.latency_ms + " ms"
+                : "—"}
+            </dd>
+            <small>
+              {c.mode === "simulation"
+                ? "Simulated measurement"
+                : "TCP connection time"}
+            </small>
+          </div>
+          <div>
+            <dt>Quality score</dt>
+            <dd>{n?.score != null ? n.score.toFixed(1) + " / 100" : "—"}</dd>
+            <small>Weighted connection quality</small>
+          </div>
+          <div>
+            <dt>Connected for</dt>
+            <dd>{duration(c.connection_duration_seconds)}</dd>
+            <small>
+              {n?.trusted
+                ? "Authorized network"
+                : n
+                  ? "Not in trusted list"
+                  : "No active connection"}
+            </small>
+          </div>
+        </dl>
+        <div className="connection-options">
+          <label className="inline-check">
+            <input
+              type="checkbox"
+              aria-label="Enable auto connect"
+              checked={c.auto_connect}
+              disabled={busy}
+              onChange={(e) =>
+                run(
+                  "/wifi/auto-connect/" +
+                    (e.target.checked ? "enable" : "disable"),
+                )
+              }
+            />
+            Auto-connect to trusted networks
+          </label>
+          <button className="text-button" onClick={() => navigate("Settings")}>
+            Connection settings <ArrowUpRight size={14} />
+          </button>
+        </div>
+      </section>
+      <section className="panel networks-panel">
+        <div className="panel-heading">
+          <div>
+            <h2>
+              Trusted networks in range{" "}
+              <span className="count">
+                {data.networks.filter((x) => x.trusted).length}
+              </span>
+            </h2>
+            <p className="muted">Sorted by connection quality.</p>
+          </div>
+          <button
+            className="button"
+            onClick={() => navigate("Nearby Networks")}
+          >
+            All nearby networks <ArrowUpRight size={14} />
+          </button>
+        </div>
+        {networkList(data.networks.filter((x) => x.trusted))}
+      </section>
+      <div className="lower-grid">
+        <section className="panel">
+          <div className="panel-heading">
+            <div>
+              <h2>Signal history</h2>
+              <p className="muted">
+                Sampled every {data.settings.history_interval} seconds
+              </p>
+            </div>
+            <span className="chart-key">Signal (%)</span>
+          </div>
+          <Timeline data={data.metrics.connections} />
+        </section>
+        <section className="panel">
+          <div className="panel-heading">
+            <h2>Recent events</h2>
+            <button
+              className="text-button"
+              onClick={() => navigate("Connection History")}
+            >
+              View history <ArrowUpRight size={14} />
+            </button>
+          </div>
+          <div className="activity-list">
+            {data.events.length ? (
+              data.events.slice(0, 5).map((e) => (
+                <div className="activity-item" key={e.id}>
+                  <Activity size={14} />
+                  <div>
+                    <strong>{e.event.replaceAll("_", " ")}</strong>
+                    <p>{e.ssid || "Application settings"}</p>
+                  </div>
+                  <time>{displayDate(e.timestamp)}</time>
+                </div>
+              ))
+            ) : (
+              <div className="empty compact">
+                <Clock3 size={22} />
+                <p>No events recorded yet.</p>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+      <div className="monitor-note">
+        <span
+          className={data.system.monitoring ? "status-dot" : "offline-dot"}
+        />
+        {data.system.monitoring
+          ? "Monitoring every " + data.settings.monitoring_interval + " seconds"
+          : "Monitoring stopped"}
+        {c.measurement_age_seconds !== null
+          ? " · Last check " + c.measurement_age_seconds + "s ago"
+          : ""}
+      </div>
+    </>
+  );
+}

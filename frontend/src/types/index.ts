@@ -1,8 +1,84 @@
-export type Network = { ssid:string; bssid:string|null; signal_strength:number; rssi:number|null; security:string; band:string|null; channel:number|null; connected:boolean; trusted:boolean; trusted_id:string|null; quality:string; score:number|null }
-export type Trusted = { id:string; ssid:string; bssid:string; security:string; auto_connect_enabled:boolean; priority:number; created_at:string; last_connected_at:string|null }
-export type Connectivity = { internet_available:boolean; latency_ms:number|null; dns_working:boolean; gateway_reachable:boolean|null; packet_loss_percent:number|null; probe:string }
-export type Current = { network:Network|null; connectivity:Connectivity|null; measurement_age_seconds:number|null; connection_duration_seconds:number; auto_connect:boolean; mode:string }
-export type Event = {id:number; ssid:string|null; event:string; detail:string; timestamp:string}
-export type Metric = {id:number; ssid:string; signal_strength:number; score:number|null; latency_ms:number|null; internet_available:boolean|null; timestamp:string}
-export type Settings = { auto_connect:boolean; smart_roaming:boolean; scan_interval:number; monitoring_interval:number; history_interval:number; minimum_signal:number; switch_threshold:number; sustain_seconds:number; roaming_cooldown:number; preferred_network:string|null; weights:Record<string,number> }
-export type Snapshot = {current:Current; networks:Network[]; trusted:Trusted[]; events:Event[]; metrics:{connections:Metric[]; signals:Metric[]}; system:{mode:string; monitoring:boolean; adapter:string; error:string|null; credential_storage:string}; settings:Settings}
+export type Network = {
+  ssid: string;
+  bssid: string | null;
+  signal_strength: number;
+  rssi: number | null;
+  security: string;
+  band: string | null;
+  channel: number | null;
+  connected: boolean;
+  trusted: boolean;
+  trusted_id: string | null;
+  quality: string;
+  score: number | null;
+};
+export type Trusted = {
+  id: string;
+  ssid: string;
+  bssid: string;
+  security: string;
+  auto_connect_enabled: boolean;
+  priority: number;
+  created_at: string;
+  last_connected_at: string | null;
+};
+export type Connectivity = {
+  internet_available: boolean;
+  latency_ms: number | null;
+  dns_working: boolean;
+  gateway_reachable: boolean | null;
+  packet_loss_percent: number | null;
+  probe: string;
+};
+export type Current = {
+  network: Network | null;
+  connectivity: Connectivity | null;
+  measurement_age_seconds: number | null;
+  connection_duration_seconds: number;
+  auto_connect: boolean;
+  mode: string;
+};
+export type Event = {
+  id: number;
+  ssid: string | null;
+  event: string;
+  detail: string;
+  timestamp: string;
+};
+export type Metric = {
+  id: number;
+  ssid: string;
+  signal_strength: number;
+  score: number | null;
+  latency_ms: number | null;
+  internet_available: boolean | null;
+  timestamp: string;
+};
+export type Settings = {
+  auto_connect: boolean;
+  smart_roaming: boolean;
+  scan_interval: number;
+  monitoring_interval: number;
+  history_interval: number;
+  minimum_signal: number;
+  switch_threshold: number;
+  sustain_seconds: number;
+  roaming_cooldown: number;
+  preferred_network: string | null;
+  weights: Record<string, number>;
+};
+export type Snapshot = {
+  current: Current;
+  networks: Network[];
+  trusted: Trusted[];
+  events: Event[];
+  metrics: { connections: Metric[]; signals: Metric[] };
+  system: {
+    mode: string;
+    monitoring: boolean;
+    adapter: string;
+    error: string | null;
+    credential_storage: string;
+  };
+  settings: Settings;
+};

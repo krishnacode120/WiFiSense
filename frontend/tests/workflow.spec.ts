@@ -1,51 +1,88 @@
-import {test,expect} from '@playwright/test'
-test('authorized simulation workflow, all pages, and responsive layout',async({page,request},info)=>{
- const headers={'X-WiFiSense':'local-dashboard'}
- // The webServer always points at an isolated test database.
- await request.post('/api/wifi/disconnect',{headers})
- for(const n of await (await request.get('/api/wifi/trusted')).json())await request.delete('/api/wifi/trusted/'+n.id,{headers})
- const errors:string[]=[]
- page.on('pageerror',e=>errors.push(e.message))
- await page.goto('/')
- await expect(page.getByRole('heading',{name:'Dashboard',exact:true})).toBeVisible()
- async function navigate(name:string){
-  if(info.project.name==='mobile')await page.getByRole('button',{name:'Toggle navigation'}).click()
-  await page.getByRole('button',{name,exact:true}).click()
-  await expect(page.getByRole('heading',{name,exact:true})).toBeVisible()
- }
- await navigate('Nearby Networks')
- await expect(page.getByText('Home_5G',{exact:true})).toBeVisible()
- const row=page.locator('.network-row').filter({hasText:'Home_5G'})
- await row.getByRole('button',{name:'Trust network'}).click()
- await expect(page.getByRole('button',{name:'Save trusted network'})).toBeDisabled()
- await page.getByLabel('Wi-Fi passphrase',{exact:true}).fill('browser-simulation-only')
- await page.getByLabel('I am authorized').check()
- await page.getByRole('button',{name:'Save trusted network'}).click()
- await expect(page.getByRole('dialog')).toBeHidden()
- await row.getByRole('button',{name:'Connect',exact:true}).click()
- await expect(row.getByText('Connected',{exact:true})).toBeVisible()
- await navigate('Dashboard')
- await expect(page.getByRole('heading',{name:'Home_5G',exact:true})).toBeVisible()
- await expect(page.getByText('Online',{exact:true})).toBeVisible()
- await page.screenshot({path:'test-results/dashboard-'+info.project.name+'.png',fullPage:true})
- await navigate('Trusted Networks')
- await expect(page.getByRole('heading',{name:'Home_5G',exact:true})).toBeVisible()
- await navigate('Connection History')
- await expect(page.getByText('connection requested',{exact:true}).first()).toBeVisible()
- await navigate('Analytics')
- await expect(page.getByRole('heading',{name:'Average network quality'})).toBeVisible()
- await navigate('Settings')
- await page.getByLabel('Scan interval (seconds)',{exact:true}).fill(info.project.name==='mobile'?'20':'15')
- await page.getByRole('button',{name:'Save settings'}).click()
- await expect(page.getByRole('status')).toContainText('Settings saved')
- await page.reload()
- await navigate('Settings')
- await expect(page.getByLabel('Scan interval (seconds)',{exact:true})).toHaveValue(info.project.name==='mobile'?'20':'15')
- await navigate('Dashboard')
- await page.getByRole('button',{name:'Disconnect',exact:true}).click()
- await expect(page.getByText('Disconnected',{exact:true})).toBeVisible()
- expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy()
- expect(errors).toEqual([])
- const trusted=await (await request.get('/api/wifi/trusted')).text()
- expect(trusted).not.toContain('browser-simulation-only')
-})
+import { test, expect } from "@playwright/test";
+test("authorized simulation workflow, all pages, and responsive layout", async ({
+  page,
+  request,
+}, info) => {
+  const headers = { "X-WiFiSense": "local-dashboard" };
+  // The webServer always points at an isolated test database.
+  await request.post("/api/wifi/disconnect", { headers });
+  for (const n of await (await request.get("/api/wifi/trusted")).json())
+    await request.delete("/api/wifi/trusted/" + n.id, { headers });
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "Dashboard", exact: true }),
+  ).toBeVisible();
+  async function navigate(name: string) {
+    if (info.project.name === "mobile")
+      await page.getByRole("button", { name: "Toggle navigation" }).click();
+    await page.getByRole("button", { name, exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name, exact: true }),
+    ).toBeVisible();
+  }
+  await navigate("Nearby Networks");
+  await expect(page.getByText("Home_5G", { exact: true })).toBeVisible();
+  const row = page.locator(".network-row").filter({ hasText: "Home_5G" });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= 390 || innerWidth > 620,
+    ),
+  ).toBeTruthy();
+  await row.getByRole("button", { name: "Trust network" }).click();
+  await expect(
+    page.getByRole("button", { name: "Save trusted network" }),
+  ).toBeDisabled();
+  await page
+    .getByLabel("Wi-Fi passphrase", { exact: true })
+    .fill("browser-simulation-only");
+  await page.getByLabel("I am authorized").check({ timeout: 10000 });
+  await page.getByRole("button", { name: "Save trusted network" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await row.getByRole("button", { name: "Connect", exact: true }).click();
+  await expect(row.getByText("Connected", { exact: true })).toBeVisible();
+  await navigate("Dashboard");
+  await expect(
+    page.getByRole("heading", { name: "Home_5G", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Online", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: "test-results/dashboard-" + info.project.name + ".png",
+    fullPage: true,
+  });
+  await navigate("Trusted Networks");
+  await expect(
+    page.getByRole("heading", { name: "Home_5G", exact: true }),
+  ).toBeVisible();
+  await navigate("Connection History");
+  await expect(
+    page.getByText("connection requested", { exact: true }).first(),
+  ).toBeVisible();
+  await navigate("Analytics");
+  await expect(
+    page.getByRole("heading", { name: "Average network quality" }),
+  ).toBeVisible();
+  await navigate("Settings");
+  await page
+    .getByLabel("Scan interval (seconds)", { exact: true })
+    .fill(info.project.name === "mobile" ? "20" : "15");
+  await page.getByRole("button", { name: "Save settings" }).click();
+  await expect(page.getByRole("status")).toContainText("Settings saved");
+  await page.reload();
+  await navigate("Settings");
+  await expect(
+    page.getByLabel("Scan interval (seconds)", { exact: true }),
+  ).toHaveValue(info.project.name === "mobile" ? "20" : "15");
+  await navigate("Dashboard");
+  await page.getByRole("button", { name: "Disconnect", exact: true }).click();
+  await expect(page.getByText("Disconnected", { exact: true })).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  expect(errors).toEqual([]);
+  const trusted = await (await request.get("/api/wifi/trusted")).text();
+  expect(trusted).not.toContain("browser-simulation-only");
+});

@@ -1,8 +1,136 @@
-import {useState} from 'react'
-import type {Settings,Trusted} from '../types'
-export function SettingsPage({initial,trusted,onSave,busy}:{initial:Settings;trusted:Trusted[];onSave:(s:Settings)=>Promise<void>;busy:boolean}){
- const [draft,setDraft]=useState(initial),[dirty,setDirty]=useState(false)
- function update<K extends keyof Settings>(key:K,value:Settings[K]){setDraft({...draft,[key]:value});setDirty(true)}
- const fields:[keyof Settings,string,number,number][]=[['scan_interval','Scan interval (seconds)',5,300],['monitoring_interval','Monitoring interval (seconds)',5,300],['history_interval','History interval (seconds)',10,3600],['minimum_signal','Minimum signal (%)',0,100],['switch_threshold','Switch score improvement',1,100],['sustain_seconds','Sustained improvement (seconds)',10,120],['roaming_cooldown','Roaming cooldown (seconds)',10,3600]]
- return <form onSubmit={e=>{e.preventDefault();void onSave(draft).then(()=>setDirty(false)).catch(()=>{})}}><div className="settings-grid"><section className="panel"><h2>Connection behavior</h2><p className="muted">Automation only considers your explicitly trusted networks.</p>{(['auto_connect','smart_roaming'] as const).map(key=><label className="setting-toggle" key={key}><span><strong>{key==='auto_connect'?'Auto connect':'Smart roaming'}</strong><small>{key==='auto_connect'?'Select the best eligible network when disconnected.':'Switch after a sustained, significant improvement.'}</small></span><input type="checkbox" checked={draft[key]} onChange={e=>update(key,e.target.checked)}/></label>)}<label>Preferred network<select value={draft.preferred_network||''} onChange={e=>update('preferred_network',e.target.value||null)}><option value="">No preference</option>{trusted.map(n=><option key={n.id} value={n.id}>{n.ssid}</option>)}</select><small>Adds 5 points to the final ranking score.</small></label></section><section className="panel"><h2>Ranking weights</h2><p className="muted">Weights are normalized to a total of 1 when saved.</p>{Object.entries(draft.weights).map(([key,value])=><label key={key} className="weight-label"><span>{key}</span><input aria-label={key+' weight'} type="number" min="0" max="100" step=".01" required value={value} onChange={e=>update('weights',{...draft.weights,[key]:Number(e.target.value)})}/></label>)}</section><section className="panel settings-wide"><h2>Timing & thresholds</h2><div className="field-grid">{fields.map(([key,label,min,max])=><label key={key}>{label}<input type="number" min={min} max={max} required value={draft[key] as number} onChange={e=>update(key,Number(e.target.value))}/></label>)}</div></section></div><div className="save-bar"><span className="muted">{dirty?'You have unsaved changes.':'Settings are up to date.'}</span><button className="button primary" disabled={busy||!dirty}>Save settings</button></div></form>
+import { useState } from "react";
+import type { Settings, Trusted } from "../types";
+export function SettingsPage({
+  initial,
+  trusted,
+  onSave,
+  busy,
+}: {
+  initial: Settings;
+  trusted: Trusted[];
+  onSave: (s: Settings) => Promise<void>;
+  busy: boolean;
+}) {
+  const [draft, setDraft] = useState(initial),
+    [dirty, setDirty] = useState(false);
+  function update<K extends keyof Settings>(key: K, value: Settings[K]) {
+    setDraft({ ...draft, [key]: value });
+    setDirty(true);
+  }
+  const fields: [keyof Settings, string, number, number][] = [
+    ["scan_interval", "Scan interval (seconds)", 5, 300],
+    ["monitoring_interval", "Monitoring interval (seconds)", 5, 300],
+    ["history_interval", "History interval (seconds)", 10, 3600],
+    ["minimum_signal", "Minimum signal (%)", 0, 100],
+    ["switch_threshold", "Switch score improvement", 1, 100],
+    ["sustain_seconds", "Sustained improvement (seconds)", 10, 120],
+    ["roaming_cooldown", "Roaming cooldown (seconds)", 10, 3600],
+  ];
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void onSave(draft)
+          .then(() => setDirty(false))
+          .catch(() => {});
+      }}
+    >
+      <div className="settings-grid">
+        <section className="panel">
+          <h2>Connection behavior</h2>
+          <p className="muted">
+            Automation only considers your explicitly trusted networks.
+          </p>
+          {(["auto_connect", "smart_roaming"] as const).map((key) => (
+            <label className="setting-toggle" key={key}>
+              <span>
+                <strong>
+                  {key === "auto_connect" ? "Auto connect" : "Smart roaming"}
+                </strong>
+                <small>
+                  {key === "auto_connect"
+                    ? "Select the best eligible network when disconnected."
+                    : "Switch after a sustained, significant improvement."}
+                </small>
+              </span>
+              <input
+                type="checkbox"
+                checked={draft[key]}
+                onChange={(e) => update(key, e.target.checked)}
+              />
+            </label>
+          ))}
+          <label>
+            Preferred network
+            <select
+              value={draft.preferred_network || ""}
+              onChange={(e) =>
+                update("preferred_network", e.target.value || null)
+              }
+            >
+              <option value="">No preference</option>
+              {trusted.map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.ssid}
+                </option>
+              ))}
+            </select>
+            <small>Adds 5 points to the final ranking score.</small>
+          </label>
+        </section>
+        <section className="panel">
+          <h2>Ranking weights</h2>
+          <p className="muted">
+            Weights are normalized to a total of 1 when saved.
+          </p>
+          {Object.entries(draft.weights).map(([key, value]) => (
+            <label key={key} className="weight-label">
+              <span>{key}</span>
+              <input
+                aria-label={key + " weight"}
+                type="number"
+                min="0"
+                max="100"
+                step=".01"
+                required
+                value={value}
+                onChange={(e) =>
+                  update("weights", {
+                    ...draft.weights,
+                    [key]: Number(e.target.value),
+                  })
+                }
+              />
+            </label>
+          ))}
+        </section>
+        <section className="panel settings-wide">
+          <h2>Timing & thresholds</h2>
+          <div className="field-grid">
+            {fields.map(([key, label, min, max]) => (
+              <label key={key}>
+                {label}
+                <input
+                  type="number"
+                  min={min}
+                  max={max}
+                  required
+                  value={draft[key] as number}
+                  onChange={(e) => update(key, Number(e.target.value))}
+                />
+              </label>
+            ))}
+          </div>
+        </section>
+      </div>
+      <div className="save-bar">
+        <span className="muted">
+          {dirty ? "You have unsaved changes." : "Settings are up to date."}
+        </span>
+        <button className="button primary" disabled={busy || !dirty}>
+          Save settings
+        </button>
+      </div>
+    </form>
+  );
 }
