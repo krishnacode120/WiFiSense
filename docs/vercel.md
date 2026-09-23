@@ -1,20 +1,18 @@
-# Vercel deployment
+# Vercel and local Wi-Fi
 
-The public Vercel build is a browser-only demonstration with synthetic networks.
-No Wi-Fi passwords are collected, stored, or transmitted. Authorize a demo network
-to try the connection controls. State is temporary and resets on page reload.
-The browser demo does not reproduce real OS roaming or continuous background service behavior.
+WiFiSense uses real Windows WLAN or Linux NetworkManager APIs. There is no
+runtime simulation or browser demo. A remotely hosted browser page cannot
+control the visitor's Wi-Fi adapter or access their OS credential manager.
 
-The full Python manager remains local: serverless hosting cannot access a visitor's
-Wi-Fi adapter, OS credential store, or persistent monitoring process.
+The Vercel build displays local-service setup instructions and a link to
+http://127.0.0.1:8000. It does not proxy Wi-Fi commands or collect credentials.
+Build the frontend locally and start the Python backend to use that address,
+or use the local Vite development server on port 5173.
 
-Import krishnacode120/WiFiSense into Vercel with the repository root as Root Directory.
-The root vercel.json installs/builds frontend and publishes frontend/dist.
-It enables VITE_WIFISENSE_DEMO only for this hosted build.
-Normal local development still uses FastAPI through /api.
+Import krishnacode120/WiFiSense with the repository root as Root Directory.
+The root vercel.json installs and builds frontend and publishes frontend/dist.
+No demo environment variable is used. A configured Vercel project can deploy
+GitHub pushes automatically; uploading code alone does not create a deployment.
 
-Deployment commands:
-    vercel --prod
-
-The September 22 hosting change was uploaded without running application tests or
-local verification, as requested. Vercel runs the required production build.
+The native-only update was made without running tests or a local build at the
+user's request. Real hardware behavior has not been verified.

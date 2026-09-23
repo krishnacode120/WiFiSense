@@ -1,4 +1,3 @@
-import { hostedDemo } from "./services/environment";
 import { useState } from "react";
 import {
   Activity,
@@ -145,11 +144,10 @@ export default function App() {
           </button>
           <span>Wi-Fi connection manager</span>
           <span className="mode-label">
-            {data?.system.mode === "system" ? "System mode" : "Simulation mode"}
+            {"System mode"}
           </span>
         </header>
         <main>
-          {hostedDemo && <div className="notice">Hosted demo · Synthetic networks only. No passwords are collected. Reload resets the demo. Run the local app to manage real Wi-Fi.</div>}
           <div className="page-heading">
             <div>
               <h1>{page}</h1>
@@ -190,10 +188,12 @@ export default function App() {
           ) : !data ? (
             <div className="panel empty">
               <Wifi size={24} />
-              <h2>Backend unavailable</h2>
+              <h2>Local Wi-Fi service required</h2>
               <p>
-                Start the WiFiSense backend on 127.0.0.1:8000, then refresh.
+                Start the local backend and frontend to manage your computer’s Wi-Fi. Cloud hosting cannot access your adapter.
               </p>
+              <a className="button primary" href="http://127.0.0.1:8000">Open local dashboard</a>
+              <a href="https://github.com/krishnacode120/WiFiSense#quick-start--windows-powershell">Setup instructions</a>
             </div>
           ) : (
             <>

@@ -1,10 +1,11 @@
+"""Hardware-free fixtures for tests only; never selected by application startup."""
 import math
 import time
 from app.adapters.base_wifi_adapter import WifiAdapter, WifiError
 from app.schemas import Network
 
 
-class SimulatedWifiAdapter(WifiAdapter):
+class FakeWifiAdapter(WifiAdapter):
     def __init__(self):
         self.current: str | None = None
         self.online = True
@@ -33,3 +34,24 @@ class SimulatedWifiAdapter(WifiAdapter):
 
     def disconnect(self):
         self.current = None
+
+
+
+class FakeCredentialStore:
+    def __init__(self):
+        self.memory = {}
+    def save_credential(self, identity, password):
+        self.memory[identity] = password
+    def get_credential(self, identity):
+        return self.memory.get(identity)
+    def delete_credential(self, identity):
+        self.memory.pop(identity, None)
+
+
+class FakeConnectivity:
+    def __init__(self, adapter):
+        self.adapter = adapter
+    def run(self):
+        return {"internet_available": self.adapter.online, "latency_ms": 20,
+                "dns_working": True, "gateway_reachable": True,
+                "packet_loss_percent": None, "probe": "test fixture"}

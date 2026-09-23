@@ -14,8 +14,7 @@ connection. OS-saved profiles never imply trust. Deleted entries cannot particip
 in later selections. Manual connections can use entries with automatic selection off.
 
 Credentials are keyed by random trusted-entry IDs to distinguish access points and
-security profiles. SQLite has no credential columns. Simulation credentials exist
-only in memory. The default DB name and all queries are scoped by mode.
+security profiles. SQLite has no credential columns.
 
 ## Ranking
 

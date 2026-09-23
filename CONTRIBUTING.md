@@ -4,7 +4,7 @@ Keep changes focused, preserve explicit authorization on every connection path, 
 never introduce password discovery or plaintext credential storage.
 
 1. Create a branch from main.
-2. Add regression tests for behavior changes using simulation or mocked adapters.
+2. Add regression tests for behavior changes using mocked adapters.
 3. Run pytest, npm run build, and the browser workflow where UI behavior changed.
 4. Format frontend files with npm run format.
 5. Stage only source/docs/synthetic fixtures and run python scripts/check_repository.py.

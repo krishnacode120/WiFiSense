@@ -5,7 +5,7 @@ only if needed. Run Uvicorn from backend so .env is resolved predictably.
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
-| WIFISENSE_MODE | simulation | simulation or system |
+| WIFISENSE_MODE | system | system mode |
 | WIFISENSE_DATABASE_URL | mode-specific SQLite file | optional DB override |
 | WIFISENSE_INTERFACE | empty | exact adapter name; required with multiple adapters |
 
@@ -70,7 +70,7 @@ References: [nmcli commands and password-file format](https://networkmanager.pag
 Backend: pytest from backend. Frontend: npm run build from frontend.
 Browser test: npm test; ports 8000 and 5173 must be free. Windows uses installed Edge;
 Linux needs npx playwright install --with-deps chromium.
-Tests start a temporary simulation database and never change real Wi-Fi.
+Tests start a temporary test database and never change real Wi-Fi.
 
 Native adapters have parser and mocked command/API tests. No live hardware connection
 has been verified in this project workspace. Validate both platforms on authorized

@@ -10,7 +10,7 @@ def test_validation_redacts_all_inputs(client, payload):
     result = trust(client, **payload)
     assert result.status_code == 422
     assert "short" not in result.text
-    assert "simulation-only-passphrase" not in result.text
+    assert "test-only-passphrase" not in result.text
     assert "sensitive" not in result.text
     assert "input" not in result.text
 

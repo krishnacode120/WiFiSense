@@ -13,7 +13,6 @@ WiFiSense/
 │   │   ├── api/routes.py
 │   │   ├── adapters/
 │   │   │   ├── base_wifi_adapter.py
-│   │   │   ├── simulated_wifi_adapter.py
 │   │   │   ├── windows_wifi_adapter.py
 │   │   │   ├── windows_wlan.py
 │   │   │   └── linux_wifi_adapter.py
@@ -76,3 +75,5 @@ WiFiSense/
 The Nearby Networks page is composed in App.tsx from the reusable network table.
 Empty Python package initializer files are omitted from this tree for readability.
 Runtime databases, environments, build outputs and dependency folders are ignored.
+
+Hardware-free adapters and credential fixtures live only in backend/tests/fakes.py.

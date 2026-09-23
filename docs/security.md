@@ -14,10 +14,6 @@ Pydantic SecretStr protects repr; validation error handlers also discard rejecte
 input and exception contexts. Python cannot guarantee zeroization of immutable
 strings in process memory, so local process compromise remains outside this boundary.
 
-Simulation is isolated and stores made-up passphrases in process memory only.
-After restart, secured simulation entries need to be removed and authorized again.
-Do not enter real credentials in a simulation demonstration.
-
 ## Local API
 
 Bind to 127.0.0.1. Host validation prevents DNS rebinding to arbitrary hostnames.

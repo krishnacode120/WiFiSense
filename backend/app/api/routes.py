@@ -97,4 +97,4 @@ def system(request: Request):
     m = manager(request)
     return {"mode": m.mode, "monitoring": bool(request.app.state.monitor and request.app.state.monitor.thread.is_alive()),
             "adapter": type(m.adapter).__name__, "error": m.last_error, "version": "1.0.0",
-            "credential_storage": "ephemeral simulation memory" if m.mode == "simulation" else "OS keyring"}
+            "credential_storage": "OS keyring"}

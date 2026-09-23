@@ -1,13 +1,11 @@
-import { hostedDemo } from "./environment";
 import type { Snapshot } from "../types";
 export async function api<T>(
   path: string,
   method = "GET",
   body?: unknown,
 ): Promise<T> {
-  if (hostedDemo) {
-    const { demoApi } = await import("./hostedDemo");
-    return demoApi<T>(path, method, body);
+  if (!["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) {
+    throw new Error("Real Wi-Fi management requires the local WiFiSense service. Open the dashboard on your computer.");
   }
   const response = await fetch("/api" + path, {
     method,

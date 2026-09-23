@@ -12,14 +12,14 @@ an explicitly authorized database entry. Credentials must be supplied by the use
 ## Features
 
 - Nearby SSID/BSSID, signal, security, band/channel, connected and trusted status.
-- OS keyring credential storage in system mode; ephemeral memory in simulation.
+- OS keyring credential storage.
 - Weighted signal, internet availability, latency and stability ranking.
 - User priorities, preferred network, per-network automation controls.
 - Hysteresis, cooldown and failure backoff; manual disconnect pauses automation.
 - Lightweight connectivity checks for the connected, trusted network.
 - SQLite history, audit events, periodic metrics, and 30-day retention.
 - Six dashboard pages with Recharts analytics, responsive layout, readable errors.
-- Default simulation mode, initially empty trusted list, auto-connect initially disabled.
+- Initially empty trusted list, auto-connect initially disabled.
 - Local-only API with Host, Origin and mutation-header checks.
 
 ## Architecture
@@ -33,7 +33,6 @@ graph TD
     C --> E[Adapter Layer]
     E --> F[Windows Adapter]
     E --> G[Linux Adapter]
-    E --> H[Simulation Adapter]
     F --> I[Operating System Wi-Fi Subsystem]
     G --> I
 ```
@@ -42,9 +41,11 @@ See [architecture](docs/architecture.md), [security](docs/security.md), and [set
 
 ## Requirements
 
-Python 3.11+, Node.js 22+, npm, Git. Real mode additionally needs a supported wireless
+Python 3.11+, Node.js 22+, npm, Git. A supported wireless
 adapter, user-session access to an unlocked secure keyring, and WLAN/NetworkManager permissions.
 Use one backend process (one worker) so only one manager controls the adapter.
+
+**Native-only runtime:** Windows WLAN / Linux NetworkManager are used by default. Simulation and browser demo modes have been removed. Set `WIFISENSE_MODE=system` or leave it unset; an old simulation value must be removed from your environment.
 
 ## Quick start — Windows PowerShell
 
@@ -54,7 +55,8 @@ From the repository root:
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
 cd backend
-$env:WIFISENSE_MODE="simulation"
+# Optional: set WIFISENSE_INTERFACE if multiple adapters are present
+$env:WIFISENSE_INTERFACE="Wi-Fi"
 ..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -66,14 +68,11 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:5173. Use **Nearby Networks → Trust network**, enter a
-made-up simulation passphrase (8–63 characters), explicitly authorize the network,
-then connect. Add Home_5G and Home_2G to try ranking. Enable auto-connect in Settings.
+Open http://127.0.0.1:5173. Use **Nearby Networks → Trust network**, enter the
+passphrase (8–63 characters), explicitly authorize the network,
+then connect. Add multiple networks to try ranking. Enable auto-connect in Settings.
 
-The simulated environment cannot touch your real Wi-Fi adapter. Networks are
-**not automatically trusted**, even if their example names resemble your own network.
-Simulation credentials vanish on restart; remove and re-add secured simulation entries
-after restarting. Open-network simulation entries do not need a passphrase.
+Networks are **not automatically trusted**. Credentials are stored in the OS keyring.
 
 ## Linux setup
 
@@ -81,29 +80,14 @@ after restarting. Open-network simulation entries do not need a passphrase.
 python3 -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements.txt
 cd backend
-WIFISENSE_MODE=simulation ../.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+# Optional: set WIFISENSE_INTERFACE if multiple adapters are present
+WIFISENSE_INTERFACE=wlan0 ../.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 # separate terminal, repository root:
 cd frontend
 npm ci
 npm run dev
 ```
 
-## Real system mode
-
-Stop the simulation backend, set `WIFISENSE_MODE=system`, and restart it.
-System and simulation use separate databases by default and mode-scoped records even
-when a custom database URL is shared. Never reuse simulation credentials for real networks.
-
-```powershell
-$env:WIFISENSE_MODE="system"
-# Optional exact adapter name:
-$env:WIFISENSE_INTERFACE="Wi-Fi"
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-
-Linux: `WIFISENSE_MODE=system WIFISENSE_INTERFACE=wlan0 ../.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`.
-
-Windows and Linux adapter implementations are included in separate phase commits.
 See setup documentation for supported security types and platform limitations.
 No saved OS profiles are implicitly imported as trusted networks.
 
@@ -152,7 +136,7 @@ npm test
 Linux uses `../.venv/bin/python -m pytest -q`. For browser tests on Linux,
 first run `npx playwright install --with-deps chromium`.
 Windows browser tests use installed Microsoft Edge.
-Browser tests start their own isolated simulation backend on port 8000 and Vite on
+Browser tests start their own isolated test backend on port 8000 and Vite on
 5173; stop development servers on those ports first. They exercise trust, connect,
 all six pages, settings persistence, disconnect, desktop and mobile layout.
 Automated tests never need a real wireless adapter.
@@ -161,7 +145,7 @@ Automated tests never need a real wireless adapter.
 
 ![WiFiSense light desktop dashboard](docs/screenshots/dashboard-desktop.png)
 
-[Mobile dashboard](docs/screenshots/dashboard-mobile.png). These are synthetic simulation
+[Mobile dashboard](docs/screenshots/dashboard-mobile.png). These are synthetic test
 fixtures from the verified browser workflow. See [verification record](docs/verification.md).
 
 ## Troubleshooting
@@ -170,7 +154,6 @@ fixtures from the verified browser workflow. See [verification record](docs/veri
 - No trusted candidates: explicitly authorize a visible network and enable its automation.
 - Keyring unavailable: unlock your login keyring; never install a plaintext fallback.
 - Wrong password: remove and re-add the trusted entry; failures back off before retrying.
-- Simulation credential unavailable after restart: re-add that simulated network.
 - No internet: TCP endpoint or DNS may be blocked; this is not captive-portal detection.
 - Native adapter errors: verify radio, WLAN service / NetworkManager, location permission,
   selected interface and OS language. See [setup](docs/setup.md).
@@ -186,7 +169,7 @@ multi-adapter routing need additional work. Packet-loss percentage remains null
 because one lightweight probe is insufficient to estimate it responsibly.
 Measurements can use the OS default route (including VPN/Ethernet); they are not
 guaranteed to isolate the Wi-Fi interface. Native hardware validation is separate
-from simulated and mocked testing.
+from hardware-free mocked testing. This native-only update has not been tested.
 
 ## GitHub & contributions
 
@@ -199,7 +182,7 @@ git init
 git branch -M main
 git status
 git add .
-git commit -m "Initial commit: WiFiSense - simulated end-to-end build"
+git commit -m "Initial commit: WiFiSense connection manager"
 gh repo create WiFiSense --public --source=. --remote=origin --description "Intelligent Wi-Fi auto-selection and secure connection manager (educational/personal use)"
 git push -u origin main
 ```
@@ -219,4 +202,4 @@ features.
 
 ## Vercel deployment
 
-The hosted build provides a browser-only demo with synthetic networks and no credentials. Real Wi-Fi management remains local. See [Vercel deployment](docs/vercel.md).
+The hosted page directs you to the local application; it does not generate fake networks or collect credentials. Real Wi-Fi management requires the local Python service. See [Vercel deployment](docs/vercel.md).

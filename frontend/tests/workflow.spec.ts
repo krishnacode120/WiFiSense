@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-test("authorized simulation workflow, all pages, and responsive layout", async ({
+test("authorized workflow, all pages, and responsive layout", async ({
   page,
   request,
 }, info) => {
@@ -36,7 +36,7 @@ test("authorized simulation workflow, all pages, and responsive layout", async (
   ).toBeDisabled();
   await page
     .getByLabel("Wi-Fi passphrase", { exact: true })
-    .fill("browser-simulation-only");
+    .fill("browser-test-only");
   await page.getByLabel("I am authorized").check({ timeout: 10000 });
   await page.getByRole("button", { name: "Save trusted network" }).click();
   await expect(page.getByRole("dialog")).toBeHidden();
@@ -84,5 +84,5 @@ test("authorized simulation workflow, all pages, and responsive layout", async (
   ).toBeTruthy();
   expect(errors).toEqual([]);
   const trusted = await (await request.get("/api/wifi/trusted")).text();
-  expect(trusted).not.toContain("browser-simulation-only");
+  expect(trusted).not.toContain("browser-test-only");
 });

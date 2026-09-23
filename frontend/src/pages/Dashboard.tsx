@@ -90,11 +90,7 @@ export function Dashboard({
                 ? c.connectivity.latency_ms + " ms"
                 : "—"}
             </dd>
-            <small>
-              {c.mode === "simulation"
-                ? "Simulated measurement"
-                : "TCP connection time"}
-            </small>
+            <small>TCP connection time</small>
           </div>
           <div>
             <dt>Quality score</dt>

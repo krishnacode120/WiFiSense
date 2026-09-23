@@ -10,7 +10,6 @@ from fastapi.staticfiles import StaticFiles
 from app.config import Config
 from app.database import make_database
 from app.adapters.base_wifi_adapter import WifiError
-from app.adapters.simulated_wifi_adapter import SimulatedWifiAdapter
 from app.services.credential_store import CredentialStore
 from app.services.connectivity_test import ConnectivityTest
 from app.services.network_manager import NetworkManager
@@ -18,7 +17,7 @@ from app.services.monitoring_service import MonitoringService
 from app.api.routes import router
 
 
-def create_app(config=None, adapter=None, credential_store=None, monitor=True):
+def create_app(config=None, adapter=None, credential_store=None, monitor=True, connectivity=None):
     config = config or Config()
 
     @asynccontextmanager
@@ -34,7 +33,7 @@ def create_app(config=None, adapter=None, credential_store=None, monitor=True):
             else:
                 raise WifiError("This operating system is unsupported")
         engine, sessions = make_database(config.database)
-        app.state.manager = NetworkManager(selected, credential_store or CredentialStore(config.mode), sessions, config.mode, ConnectivityTest(selected))
+        app.state.manager = NetworkManager(selected, credential_store or CredentialStore(config.mode), sessions, config.mode, connectivity if connectivity is not None else ConnectivityTest(selected))
         app.state.monitor = MonitoringService(app.state.manager) if monitor else None
         if app.state.monitor:
             app.state.monitor.start()

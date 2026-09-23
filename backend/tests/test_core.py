@@ -58,7 +58,7 @@ def test_credential_interface():
         def delete_password(self, service, identity):
             self.memory.pop(identity, None)
             
-    store = CredentialStore("system")
+    store = object.__new__(CredentialStore)
     store.backend = MockBackend()
     store.save_credential("ssid-id", "not-a-real-credential")
     assert store.get_credential("ssid-id") == "not-a-real-credential"
@@ -70,7 +70,7 @@ def test_credential_backend_failure_is_redacted():
     class Broken:
         def get_password(self, *args):
             raise RuntimeError("sensitive value from backend")
-    store = CredentialStore("system")
+    store = object.__new__(CredentialStore)
     store.backend = Broken()
     with pytest.raises(WifiError, match="Could not read") as exc:
         store.get_credential("id")
@@ -139,11 +139,11 @@ def test_failed_connection_backoff_and_no_secret(client, manager, monkeypatch):
     calls = []
     def broken(*args):
         calls.append(True)
-        raise RuntimeError("simulation-only-passphrase")
+        raise RuntimeError("test-only-passphrase")
     monkeypatch.setattr(manager.adapter, "connect", broken)
     result = client.post("/api/wifi/connect/" + home["id"])
     assert result.status_code == 409
-    assert "simulation-only-passphrase" not in result.text
+    assert "test-only-passphrase" not in result.text
     client.post("/api/wifi/auto-connect/enable")
     manager.tick()
     assert len(calls) == 1
@@ -185,13 +185,13 @@ def test_password_not_in_db_logs_or_api(client, manager, capsys):
     client.post("/api/wifi/connect/" + identity)
     for endpoint in ("/wifi/trusted", "/wifi/current", "/wifi/scan", "/wifi/history", "/wifi/metrics", "/system/status"):
         text = client.get("/api" + endpoint).text
-        assert "simulation-only-passphrase" not in text
+        assert "test-only-passphrase" not in text
     with manager.sessions() as db:
         from sqlalchemy import text
         script = "\n".join(db.connection().connection.driver_connection.iterdump())
-        assert "simulation-only-passphrase" not in script
+        assert "test-only-passphrase" not in script
         assert "password" not in script.lower()
-    assert "simulation-only-passphrase" not in capsys.readouterr().err
+    assert "test-only-passphrase" not in capsys.readouterr().err
     assert client.delete("/api/wifi/trusted/" + identity).status_code == 200
     assert manager.credentials.get_credential(identity) is None
 

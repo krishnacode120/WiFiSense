@@ -1,4 +1,3 @@
-import { hostedDemo } from "../services/environment";
 import { useState } from "react";
 import { ShieldCheck, X } from "lucide-react";
 import type { Network } from "../types";
@@ -32,7 +31,7 @@ export function TrustDialog({
       await onSave({
         ssid,
         security,
-        password: hostedDemo || security === "Open" ? undefined : password,
+        password: security === "Open" ? undefined : password,
         bssid: pin ? network?.bssid || "" : "",
         authorized,
         auto_connect_enabled: true,
@@ -89,7 +88,7 @@ export function TrustDialog({
               <option>Open</option>
             </select>
           </label>
-          {security !== "Open" && !hostedDemo && (
+          {security !== "Open" && (
             <label>
               Wi-Fi passphrase
               <input
@@ -103,7 +102,7 @@ export function TrustDialog({
                 onChange={(e) => setPassword(e.target.value)}
               />
               <small>
-                Stored in your OS keyring. Simulation uses temporary memory.
+                Stored securely in your OS keyring.
               </small>
             </label>
           )}

@@ -1,5 +1,4 @@
 import sys
-import keyring
 from app.adapters.base_wifi_adapter import WifiError
 
 
@@ -18,7 +17,7 @@ class CredentialStore:
             if not self.backend or self.backend.priority <= 0:
                 raise RuntimeError()
         except Exception:
-            pass # allow patching in tests
+            raise WifiError("Secure OS credential store unavailable; unlock Windows Credential Manager or Linux Secret Service and restart WiFiSense") from None
 
     def save_credential(self, identity: str, password: str):
         try:
